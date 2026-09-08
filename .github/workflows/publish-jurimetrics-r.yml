@@ -1,0 +1,50 @@
+# Workflow para o repositório público "research-containers" (a criar).
+# Estrutura sugerida do repo:
+#   research-containers/
+#     README.md
+#     LICENSE                  (MIT puro)
+#     jurimetrics-r/Dockerfile (copiar de _github-perfil/packages/jurimetrics-r)
+#     .github/workflows/publish-jurimetrics-r.yml (este arquivo)
+#
+# Publica ghcr.io/valbergregory/jurimetrics-r:{4.4.2, latest}. A imagem
+# aparece na aba Packages do perfil; como o repo é público, torne o pacote
+# público em Package settings → Change visibility → Public.
+
+name: Publish jurimetrics-r
+
+on:
+  push:
+    branches: [main]
+    paths: ["jurimetrics-r/**", ".github/workflows/publish-jurimetrics-r.yml"]
+  schedule:
+    - cron: "0 6 1 * *"   # rebuild mensal (segurança do SO base)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  R_VERSION: "4.4.2"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: jurimetrics-r
+          build-args: R_VERSION=${{ env.R_VERSION }}
+          push: true
+          tags: |
+            ghcr.io/valbergregory/jurimetrics-r:${{ env.R_VERSION }}
+            ghcr.io/valbergregory/jurimetrics-r:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
