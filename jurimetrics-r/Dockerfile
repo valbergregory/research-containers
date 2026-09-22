@@ -1,7 +1,8 @@
 # Imagem pública de reprodutibilidade para os artigos R-only
 # (Pricing-Non-Pecuniary-Harm, STJ-Moral-Damages-Jurimetrics,
 #  Geography-of-Judicial-Delay, marine-fisheries-data-cube, fisheries-closures-brazil,
-#  Port-Digitalization-Observatory, transmissao-precos-leite-brasil).
+#  Port-Digitalization-Observatory, Port-Network-Resilience, transmissao-precos-leite-brasil,
+#  tourism-gravity-brazil, pix-geography-brazil, maquinas-agricolas-*).
 #
 # Publicada como ghcr.io/valbergregory/jurimetrics-r:<R_VERSION>
 # Cada repositório continua usando o seu próprio renv.lock; a imagem só garante
@@ -30,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
       libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
       zlib1g-dev libzstd-dev liblz4-dev \
+      libnetcdf-dev libglpk-dev \
       pandoc \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,10 +40,21 @@ RUN install2.r --error --skipinstalled \
       renv targets tarchetypes \
       duckdb arrow DBI dbplyr \
       data.table dplyr tidyr readr stringr purrr lubridate \
-      fixest sandwich lmtest modelsummary \
-      sf h3jsr \
+      fixest sandwich lmtest modelsummary marginaleffects broom \
+      sf h3jsr terra exactextractr ncdf4 \
       ggplot2 scales patchwork \
       jsonlite yaml testthat \
+      knitr rmarkdown igraph httr2 \
+    && rm -rf /tmp/downloaded_packages
+
+# Métodos usados nos artigos de economia aplicada e oceanos
+# (inferência causal em painel, controle sintético, séries temporais, heatwaves, APIs de dados BR)
+RUN install2.r --error --skipinstalled \
+      did HonestDiD Synth plm \
+      tsibble fable fabletools \
+      heatwaveR \
+      sidrar WDI \
+      gt texreg kableExtra \
     && rm -rf /tmp/downloaded_packages
 
 WORKDIR /work
